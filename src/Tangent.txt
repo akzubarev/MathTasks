@@ -1,0 +1,249 @@
+import java.awt.*;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class Tangent extends Task {
+
+    static Random rnd = new Random();
+
+    public Tangent(int type) {
+        typify(type);
+
+    }
+
+    int k, l, m, n, t;
+
+    private void typify(int type) {
+
+        switch (type) {
+            case 5:
+                k = 1 + rnd.nextInt(5);
+                if (rnd.nextBoolean())
+                    k *= -1;
+                l = 1 + rnd.nextInt(5);
+                if (rnd.nextBoolean())
+                    l *= -1;
+                m = 1 + rnd.nextInt(5);
+                if (rnd.nextBoolean())
+                    m *= -1;
+                n = rnd.nextInt(6);
+                if (rnd.nextBoolean())
+                    n *= -1;
+                t = rnd.nextInt(6);
+                if (rnd.nextBoolean())
+                    t *= -1;
+
+
+                break;
+            default:
+                break;
+
+        }
+    }
+
+    public static void plot() {
+        Plot pl = Plot.plot(Plot.plotOpts().gridColor(Color.gray).gridStroke(new BasicStroke(1))).
+                xAxis("x", Plot.axisOpts().range(-10, 10)).
+                yAxis("y", Plot.axisOpts().range(-10, 10));
+        pl = new Plot(pl.opts().grids(20, 20));
+
+        ArrayList<BigDecimal> xs = new ArrayList<BigDecimal>();
+        ArrayList<BigDecimal> ys = new ArrayList<BigDecimal>();
+        BigDecimal[] ps = new BigDecimal[]{BigDecimal.valueOf(-7), BigDecimal.valueOf(-5), BigDecimal.valueOf(-1),
+                BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(4), BigDecimal.valueOf(6), BigDecimal.valueOf(8)};
+
+
+        xs.add(BigDecimal.valueOf(-10));
+        ys.add(BigDecimal.valueOf(-10 + rnd.nextInt(21)));
+        for (int i = -9; i < 11; i++) {
+            xs.add(BigDecimal.valueOf(i));
+            BigDecimal prevprev = BigDecimal.valueOf(0);
+            BigDecimal prevprevprev = BigDecimal.valueOf(0);
+            if (i > -9) prevprev = ys.get(ys.size() - 2);
+            if (i > -8) prevprevprev = ys.get(ys.size() - 3);
+
+            BigDecimal prev = ys.get(ys.size() - 1);
+            BigDecimal upperbound = prev.compareTo(BigDecimal.valueOf(6)) > 0 ? BigDecimal.valueOf(10) : prev.add(BigDecimal.valueOf(4));
+            BigDecimal lowerbound = prev.compareTo(BigDecimal.valueOf(-6)) < 0 ? BigDecimal.valueOf(-10) : prev.subtract(BigDecimal.valueOf(4));
+
+            if (prevprevprev.compareTo(prevprev) < 0 && prevprev.compareTo(prev) > 0)
+                upperbound = prev.subtract(BigDecimal.valueOf(1));
+            if (prevprevprev.compareTo(prevprev) > 0 && prevprev.compareTo(prev) < 0)
+                lowerbound = prev.add(BigDecimal.valueOf(1));
+
+            BigDecimal next = lowerbound.add(BigDecimal.valueOf(rnd.nextInt(upperbound.subtract(lowerbound).add(BigDecimal.valueOf(1)).intValue())));
+
+            if (prev.compareTo(BigDecimal.valueOf(0)) > 0 && BigDecimal.valueOf(0).compareTo(next) > 0 ||
+                    BigDecimal.valueOf(0).compareTo(prev) > 0 && next.compareTo(BigDecimal.valueOf(0)) > 0) {
+                ys.add(BigDecimal.valueOf(0));
+                if (i < 10) {
+                    ys.add(next);
+                    xs.add(BigDecimal.valueOf(i + 1));
+                    i++;
+                }
+            } else
+                ys.add(next);
+        }
+
+        for (int i = 0; i < 21; i++)
+            System.out.print(String.format("(%d,%d) ", xs.get(i).intValue(), ys.get(i).intValue()));
+
+        BigDecimal[][] systemkoefs = new BigDecimal[29][];
+        for (int i = 0; i < 21; i++) {
+            BigDecimal[] equationkoefs = new BigDecimal[30];
+            equationkoefs[29] = ys.get(i);
+            for (int j = 0; j < equationkoefs.length - 1; j++)
+                equationkoefs[28 - j] = xs.get(i).pow(j);
+            systemkoefs[i] = equationkoefs;
+        }
+        for (int i = 0; i < systemkoefs.length - 21; i++) {
+            BigDecimal[] equationkoefs = new BigDecimal[30];
+            equationkoefs[29] = BigDecimal.valueOf(0);
+            equationkoefs[28] = BigDecimal.valueOf(0);
+            for (int j = 1; j < equationkoefs.length - 1; j++)
+                equationkoefs[28 - j] = ps[i].pow(j - 1).multiply(BigDecimal.valueOf(j));
+            systemkoefs[21 + i] = equationkoefs;
+        }
+
+
+//        for (BigDecimal[] sys : systemkoefs) {
+//            for (BigDecimal s : sys)
+//                System.out.print(String.format("%.2f ", s));
+//            System.out.println();
+//        }
+        Plot.Data d = Plot.data();
+
+        Graph g = new Graph();
+        g.koefs = Lup.calculate(systemkoefs);
+        System.out.println();
+
+        for (int i = 0; i < g.koefs.length; i++)
+            System.out.print(String.format("%.1000f\n", g.koefs[i]));
+        for (double i = -10; i <= 10; i += 0.001) {//0.001f) {
+            d = d.xy(i, g.getY(BigDecimal.valueOf(i)).doubleValue());
+            //   if (Math.abs(i - (int) i) < 0.00001f) System.out.print(String.format("%.2f ", g.getY(i)));
+        }
+
+//        Plot.Data b = Plot.data();
+//        b = b.xy(-3, 1).xy(1, 2);
+//        Plot.DataSeriesOptions opts = Plot.seriesOpts().
+//                marker(Plot.Marker.DIAMOND).
+//                markerColor(Color.GREEN).
+//                color(Color.BLACK);
+
+        Plot plot = pl.series("Data", d, null);
+        // Plot plot1 = pl.series("Data1", b, null);
+        //Plot p2 = pl.series("Data2", Plot.data().xy(1, 1), opts);
+
+        try {
+            plot.save("Graph", "png");
+        } catch (
+                IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+//        ArrayList<Task> tasks = new ArrayList<>();
+//        for (int i = 0; i < 5; i++)
+//            tasks.add(new Tangent(5));
+//        toTEX(tasks);
+        plot();
+    }
+
+
+    @Override
+    String Display() {
+        return String.format("Касательная к графику функции $f(x)=%s$ параллельна прямой $y=%s$ и касается графика в точке $(1; %d)$,\\newline\n" +
+                        "Определите значение производной функции $f(x)$ в точке касания.",
+                new Polynomial(m, n, k - 3 * m - 2 * n, l).show(), new Polynomial(k, t).show(), k - 2 * m - n + l);
+    }
+
+    @Override
+    String GetAnswer() {
+        return "" + k;
+    }
+
+    @Override
+    String GetTitle() {
+        return "Касательная";
+    }
+}
+
+class Graph {
+    BigDecimal[] koefs;
+
+    BigDecimal getY(BigDecimal x) {
+        BigDecimal result = BigDecimal.valueOf(0).setScale(1000, RoundingMode.HALF_EVEN);
+        for (int j = 0; j < koefs.length; j++)
+            result = result.add(x.setScale(1000,RoundingMode.HALF_EVEN).pow(j).multiply(koefs[koefs.length - 1 - j]));
+        return result;
+    }
+
+}
+
+class Parabola {
+    double a, b, c;
+
+    void interpolate(int x1, int x2, int x3, int y1, int y2, int y3) {
+        a = ((y3 - (x3 * (y2 - y1) + x2 * y1 - x1 * y2)) / (double) (x2 - x1))
+                / (x3 * (x3 - x1 - x2) + x1 * x2);
+        b = ((double) (y2 - y1)) / (x2 - x1) - a * (x1 + x2);
+        c = ((double) (x2 * y1 - x1 * y2)) / (x2 - x1) + a * x1 * x2;
+    }
+
+    double getY(double x) {
+        return a * x * x + b * x + c;
+
+    }
+}
+
+class Polynomial {
+    int d = 0, a = 0, b = 0, c = 0;
+
+    Polynomial(int _d, int _a, int _b, int _c) {
+        d = _d;
+        a = _a;
+        b = _b;
+        c = _c;
+    }
+
+    Polynomial(int _b, int _c) {
+        this(0, 0, _b, _c);
+    }
+
+    Polynomial(int _c) {
+        this(0, 0, 0, _c);
+    }
+
+    String show() {
+        String result = "";
+        if (d > 1 || d < -1) result += d + "x^3";
+        if (d == 1) result += "x^3";
+        if (d == -1) result += "-x^3";
+
+        if (a > 1 && d != 0) result += "+" + a + "x^2";
+        if (a == 1 && d != 0) result += "+x^2";
+        if (a > 1 && d == 0) result += a + "x^2";
+        if (a == 1 && d == 0) result += "x^2";
+        if (a < -1) result += "-" + -a + "x^2";
+        if (a == -1) result += "-x^2";
+
+        if (b > 1 && (a != 0 || d != 0)) result += "+" + b + "x";
+        if (b == 1 && (a != 0 || d != 0)) result += "+x";
+        if (b > 1 && (a == 0 && d == 0)) result += b + "x";
+        if (b == 1 && (a == 0 && d == 0)) result += "x";
+        if (b < -1) result += "-" + -b + "x";
+        if (b == -1) result += "-x";
+
+        if (c > 0 && (a != 0 || b != 0 || d != 0)) result += "+" + c;
+        if (c < 0) result += "-" + -c;
+        if (c > 0 && (a == 0 && b == 0 && c == 0)) result += c;
+
+
+        return result;
+    }
+}

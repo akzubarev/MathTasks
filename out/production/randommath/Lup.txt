@@ -1,0 +1,75 @@
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+public class Lup {
+    public static BigDecimal[] calculate(BigDecimal[][] array) throws IllegalArgumentException {
+        if (array.length != array[0].length - 1) {
+            throw new IllegalArgumentException("число уравнений должно быть равно количеству неизвестных");
+        }
+        int[] p = new int[array.length];
+        for (int i = 0; i < p.length; i++) {
+            p[i] = i;
+        }
+
+        //факторизация матрицы A
+        for (int k = 0; k < array[0].length - 1; k++) {
+            BigDecimal max = BigDecimal.valueOf(0);
+            int numberRowForReplace = k;
+            for (int j = k; j < array.length; j++) {
+                if (array[j][k].abs().compareTo(max) > 0) {
+                    numberRowForReplace = j;
+                    max = array[j][k].abs();
+                }
+            }
+            if (max.compareTo(BigDecimal.valueOf(0)) == 0) {
+                throw new IllegalArgumentException("матрица не должна быть вырожденной");
+            }
+
+            //меняем местами номера строк, которые будут переставлены
+            int value = p[k];
+            p[k] = p[numberRowForReplace];
+            p[numberRowForReplace] = value;
+
+            //переставляем соотвествующие строки
+            BigDecimal[] row = array[k];
+            array[k] = array[numberRowForReplace];
+            array[numberRowForReplace] = row;
+
+            //прямая подстановка
+            for (int i = k + 1; i < array.length; i++) {
+                //делим элементы ниже главной диагонали на ведущий
+                array[i][k] = array[i][k].divide(array[k][k], 1000, RoundingMode.HALF_UP);
+                for (int j = k + 1; j < array.length; j++) {
+                    //вычитаем элементы текущей k-строчки помноженные на коэффициент из элементов строчек ниже ее
+                    array[i][j] = array[i][j].subtract(array[i][k].multiply(array[k][j]));
+                }
+            }
+        }
+
+        // прямая подстановка
+        // вычисление y системы Ly=Pb
+        BigDecimal[] y = new BigDecimal[array.length];
+        for (int i = 0; i < array.length; i++) {
+            BigDecimal value = BigDecimal.valueOf(0);
+            for (int j = 0; j < i; j++) {
+                value = value.add(array[i][j].multiply(y[j]));
+            }
+            y[i] = array[i][array[0].length - 1].subtract(value);
+        }
+
+
+        // обратная подстановка
+        // вычисление x системы Ux=y
+
+        BigDecimal[] x = new BigDecimal[array.length];
+        for (int i = array.length - 1; i >= 0; i--) {
+            BigDecimal value = BigDecimal.valueOf(0);
+            for (int j = i + 1; j < array.length; j++) {
+                value = value.add(array[i][j].multiply(x[j]));
+            }
+            x[i] = (y[i].subtract(value)).divide(array[i][i], 1000, RoundingMode.HALF_EVEN);
+        }
+
+        return x;
+    }
+}

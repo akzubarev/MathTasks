@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>MathJax example</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+<p>
+    Calculate the following: \[
+    $dscr\]
+<div style="text-align:center;">
+    <input type="text" size="10">
+</div>
+<div style="text-align:center;">
+    <a id="toggleLink"
+       href="javascript:void(0);
+           " onclick="viewdiv('mydiv');
+           " data-text-show="Hide answer"
+       data-text-hide="Show answer">Show answer</a>
+    <div id="mydiv" style="display:none;">     \[$answ\]</div>
+</div>
+<script>
+    function viewdiv(id) {
+        var el = document.getElementById(id);
+        var link = document.getElementById('toggleLink');
+        if (el.style.display == "block") {
+            el.style.display = "none";
+            link.innerText = link.getAttribute('data-text-hide');
+        } else {
+            el.style.display = "block";
+            link.innerText = link.getAttribute('data-text-show');
+        }
+    }
+</script>
+</p>
+</body>
+</html>

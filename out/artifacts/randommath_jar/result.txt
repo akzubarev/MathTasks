@@ -1,0 +1,13 @@
+\documentclass[12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\pagenumbering{gobble}
+
+\begin{document}
+    \section*{Task list}\subsection*{1} Арифмитическая прогрессия: \[a_7 = 15, d= 1, a_1 - ?\]\[9\]
+\subsection*{2} Арифмитическая прогрессия: \[a_1 = 6, d= 5, a_n= 36, n - ?\]\[7\]
+\subsection*{3} Арифмитическая прогрессия: \[a_1 = 1, d= 2, a_n= 19, n - ?\]\[10\]
+\subsection*{4} Арифмитическая прогрессия: \[a_1 = 7, d= 1, a_1 - ?\]\[7\]
+\subsection*{5} Арифмитическая прогрессия: \[a_1 = 10, d= 7, a_n= 45, n - ?\]\[6\]
+\end{document}
